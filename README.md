@@ -8,8 +8,7 @@ music player
 <title>Loop — your music player</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-  <head>
-    <!-- This line tells Android/Chrome to use the image as the app icon -->
+      <!-- This line tells Android/Chrome to use the image as the app icon -->
     <link rel="icon" href="628143cbdf7a65d4d74569e80b99d576.JPG">
     
   :root{
