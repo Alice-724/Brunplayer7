@@ -3,6 +3,7 @@ music player
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<meta name="theme-color" content="#FFFDF5">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Loop — your music player</title>
@@ -273,7 +274,26 @@ let state = {
   relinkFor:null,
   toastMsg:null,
 };
-const sessionFiles = {}; // songId -> File (in-memory only, not persisted)
+const sessionFiles = {};
+  const dbPromise = new Promise((resolve) => {
+  const req = indexedDB.open('LoopAudioDB', 1);
+  req.onupgradeneeded = (e) => e.target.result.createObjectStore('audio');
+  req.onsuccess = (e) => resolve(e.target.result);
+});
+
+async function saveAudio(id, file) {
+  const db = await dbPromise;
+  db.transaction('audio', 'readwrite').objectStore('audio').put(file, id);
+}
+
+async function getAudio(id) {
+  const db = await dbPromise;
+  return new Promise(res => {
+    const req = db.transaction('audio', 'readonly').objectStore('audio').get(id);
+    req.onsuccess = () => res(req.result);
+  });
+}
+  // songId -> File (in-memory only, not persisted)
 const audioEl = document.getElementById('audioEl');
 
 async function loadData(){
@@ -660,6 +680,7 @@ document.getElementById('fileInput').addEventListener('change', async (e)=>{
   for(const file of files){
     const id = uid();
     sessionFiles[id] = file;
+    saveAudio(id, file); // Saves it permanently to the database
     const rawName = file.name.replace(/\.[^/.]+$/, '');
     const title = rawName.replace(/[_\-]+/g,' ').replace(/\s+/g,' ').trim() || 'Untitled';
     const song = {id, title: title.charAt(0).toUpperCase()+title.slice(1), artist:'Unknown artist', cover:null, fileName:file.name, duration:null, addedAt:Date.now()+count};
@@ -775,10 +796,17 @@ function playFromList(songId, queueIds){
   state.currentIndex = queueIds.indexOf(songId);
   loadAndPlay();
 }
-function loadAndPlay(){
+async function loadAndPlay(){
   const s = songById(state.queue[state.currentIndex]);
   if(!s) return;
-  const file = sessionFiles[s.id];
+  
+  let file = sessionFiles[s.id];
+  // If it's not in temporary memory, pull it from the database!
+  if(!file) {
+    file = await getAudio(s.id);
+    if(file) sessionFiles[s.id] = file; 
+  }
+  
   if(!file){
     state.isPlaying=false;
     state.nowPlayingOpen=true;
@@ -853,6 +881,7 @@ document.getElementById('relinkInput').addEventListener('change', (e)=>{
   const file = e.target.files[0];
   if(file && state.relinkFor){
     sessionFiles[state.relinkFor] = file;
+    saveAudio(state.relinkFor, file);       // <--- Add this new line here too!
     const s = songById(state.relinkFor);
     if(s && !s.duration) getDuration(file, s.id);
     if(state.currentIndex>=0 && state.queue[state.currentIndex]===state.relinkFor) loadAndPlay();
