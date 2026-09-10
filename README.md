@@ -278,17 +278,18 @@ const audioEl = document.getElementById('audioEl');
 
 async function loadData(){
   try{
-    const r = await window.storage.get('loop_library');
-    if(r && r.value){
-      const d = JSON.parse(r.value);
+    const r = localStorage.getItem('loop_library'); 
+    if(r){
+      const d = JSON.parse(r);
       state.songs = d.songs || [];
       state.playlists = d.playlists || [];
     }
   }catch(e){}
 }
+
 async function saveData(){
   try{
-    await window.storage.set('loop_library', JSON.stringify({songs:state.songs, playlists:state.playlists}));
+    localStorage.setItem('loop_library', JSON.stringify({songs:state.songs, playlists:state.playlists}));
   }catch(e){}
 }
 function uid(){ return Math.random().toString(36).slice(2,10) + Date.now().toString(36); }
@@ -357,7 +358,7 @@ function renderLibrary(){
         <div class="hscroll">
           ${recent.map(s => `
             <div class="rec-card">
-              <button class="cover" style="width:126px;height:126px;padding:0" onclick="playFromList('${s.id}', ${JSON.stringify(recent.map(x=>x.id))})">${coverStyle(s)}</button>
+              <button class="cover" style="width:126px;height:126px;padding:0" onclick='playFromList("${s.id}", ${JSON.stringify(recent.map(x=>x.id))})'>${coverStyle(s)}</button>
               <div class="t">${escapeHtml(s.title)}</div>
               <div class="a">${escapeHtml(s.artist)}</div>
             </div>`).join('')}
@@ -399,7 +400,7 @@ function renderPlCard(p){
 
 function renderSongRow(s, queueIds){
   return `<div class="song-row">
-    <button class="cover" style="width:50px;height:50px;padding:0" onclick="playFromList('${s.id}', ${JSON.stringify(queueIds)})">${coverStyle(s)}</button>
+    <button class="cover" style="width:50px;height:50px;padding:0" onclick='playFromList("${s.id}", ${JSON.stringify(queueIds)})'>${coverStyle(s)}</button>
     <button class="meta" style="text-align:left" onclick="playFromList('${s.id}', ${JSON.stringify(queueIds)})">
       <div class="t">${escapeHtml(s.title)}</div>
       <div class="a">${escapeHtml(s.artist)}</div>
@@ -468,7 +469,7 @@ function renderPlaylistDetail(){
     </div>
     <div class="greeting"><p>${songs.length} song${songs.length===1?'':'s'}</p></div>
     ${songs.length ? `<div class="section" style="padding-top:6px">
-      <button class="btn primary" style="width:100%" onclick="playFromList('${songs[0].id}', ${JSON.stringify(songs.map(s=>s.id))})">${ic.play('#FFFDF5',16)} Play all</button>
+      <button class="btn primary" style="width:100%" onclick='playFromList("${songs[0].id}", ${JSON.stringify(songs.map(s=>s.id))})'>${ic.play('#FFFDF5',16)} Play all</button>
     </div>` : ''}
     ${songs.length===0 ? `
       <div class="empty-state">No songs in this playlist yet. Open a song's ⋯ menu from your library and choose "Add to playlist".</div>
@@ -476,8 +477,10 @@ function renderPlaylistDetail(){
       <div class="song-list" style="padding-top:6px">
         ${songs.map((s,i)=>`
           <div class="song-row">
-            <button class="cover" style="width:50px;height:50px;padding:0" onclick="playFromList('${s.id}', ${JSON.stringify(songs.map(x=>x.id))})">${coverStyle(s)}</button>
-            <button class="meta" style="text-align:left" onclick="playFromList('${s.id}', ${JSON.stringify(songs.map(x=>x.id))})">
+            <button class="cover" style="width:50px;height:50px;padding:0" onclick="playFromList('${JSON.stringify(songs.map(x=>x.id))})">${coverStyle(s)}</button>
+            <button class="cover" style="width:50px;height:50px;padding:0" onclick='playFromList("${s.id}", ${JSON.stringify(songs.map(x=>x.id))})'>${coverStyle(s)}</button>
+<button class="meta" style="text-align:left" onclick='playFromList("${s.id}", ${JSON.stringify(songs.map(x=>x.id))})'>
+
               <div class="t">${escapeHtml(s.title)}</div><div class="a">${escapeHtml(s.artist)}</div>
             </button>
             <div style="display:flex;flex-direction:column">
