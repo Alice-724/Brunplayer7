@@ -1,0 +1,15 @@
+{
+  "name": "Loop Music Player",
+  "short_name": "Loop",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#FFFDF5",
+  "theme_color": "#FFFDF5",
+  "icons": [
+    {
+      "src": "4e82235cae7656cf986204f0af7c1024.JPG",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}
