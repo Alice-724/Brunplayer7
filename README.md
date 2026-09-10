@@ -930,6 +930,10 @@ function escapeAttr(str){ return escapeHtml(str).replace(/"/g,'&quot;'); }
   await loadData();
   render();
 })();
+  // Turn on Offline Mode
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js');
+}
 </script>
 </body>
 </html>
