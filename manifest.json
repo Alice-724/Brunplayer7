@@ -1,15 +1,22 @@
 {
   "name": "Brunplayer7",
-  "short_name": "Brunplayer7",
-  "start_url": ".https://alice-724.github.io/Brunplayer7/",
+  "short_name": "Brunplayer",
+  "description": "My private, offline-capable music player.",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#FFFDF5",
   "theme_color": "#FFFDF5",
   "icons": [
     {
-      "src": "4e82235cae7656cf986204f0af7c1024.JPG",
-      "sizes": "192X192",
-      "type": "image/jpg"
+      "src": "icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
