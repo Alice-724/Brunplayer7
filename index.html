@@ -205,6 +205,7 @@
   .fab-add{position:fixed;right:calc(50% - 240px + 20px);bottom:110px;z-index:15;}
   @media (max-width:480px){ .fab-add{right:20px;} }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.min.js"></script>
 </head>
 <body>
 <div id="app"></div>
@@ -677,15 +678,43 @@ function triggerAdd(){ document.getElementById('fileInput').click(); }
 document.getElementById('fileInput').addEventListener('change', async (e)=>{
   const files = Array.from(e.target.files || []);
   let count=0;
-   <div class="topbar-actions">
-   <!-- New Rescan Button -->
-   <button class="round-btn" onclick="rescanLibrary()" title="Rescan Library">
-   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#364C84" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
-    </button>
-    <!-- Your existing Add Button -->
-    <button class="round-btn" onclick="triggerAdd()">${ic.plus()}</button>
-    </div>
-  
+     for(const file of files){
+    const id = uid();
+    sessionFiles[id] = file;
+    saveAudio(id, file); // Permanent save
+    
+    // Default fallback info
+    const rawName = file.name.replace(/\.[^/.]+$/, '');
+    const title = rawName.replace(/[_\-]+/g,' ').replace(/\s+/g,' ').trim() || 'Untitled';
+    const song = {id, title: title.charAt(0).toUpperCase()+title.slice(1), artist:'Unknown artist', cover:null, fileName:file.name, duration:null, addedAt:Date.now()+count, lyrics:''};
+    
+    state.songs.push(song);
+    count++;
+    getDuration(file, id);
+
+    // NEW: The MP3 "X-Ray" Scanner
+    window.jsmediatags.read(file, {
+      onSuccess: function(tag) {
+        const s = songById(id);
+        if (s) {
+          // 1. Auto-fill real Title and Artist
+          if (tag.tags.title) s.title = tag.tags.title;
+          if (tag.tags.artist) s.artist = tag.tags.artist;
+
+          // 2. Auto-fill hidden Lyrics (USLT tag)
+          if (tag.tags.lyrics && tag.tags.lyrics.lyrics) {
+            s.lyrics = tag.tags.lyrics.lyrics;
+          }
+          
+          saveData(); // Save the new data to memory
+          if (state.screen === 'library') render(); // Update the screen
+        }
+      },
+      onError: function(error) {
+        console.log("No hidden tags found for this song.");
+      }
+    });
+     }
   await saveData();
   e.target.value = '';
   toast(`Added ${count} song${count===1?'':'s'}`);
