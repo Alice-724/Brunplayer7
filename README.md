@@ -677,17 +677,15 @@ function triggerAdd(){ document.getElementById('fileInput').click(); }
 document.getElementById('fileInput').addEventListener('change', async (e)=>{
   const files = Array.from(e.target.files || []);
   let count=0;
-  for(const file of files){
-    const id = uid();
-    sessionFiles[id] = file;
-    saveAudio(id, file); // Saves it permanently to the database
-    const rawName = file.name.replace(/\.[^/.]+$/, '');
-    const title = rawName.replace(/[_\-]+/g,' ').replace(/\s+/g,' ').trim() || 'Untitled';
-    const song = {id, title: title.charAt(0).toUpperCase()+title.slice(1), artist:'Unknown artist', cover:null, fileName:file.name, duration:null, addedAt:Date.now()+count};
-    state.songs.push(song);
-    count++;
-    getDuration(file, id);
-  }
+   <div class="topbar-actions">
+   <!-- New Rescan Button -->
+   <button class="round-btn" onclick="rescanLibrary()" title="Rescan Library">
+   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#364C84" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
+    </button>
+    <!-- Your existing Add Button -->
+    <button class="round-btn" onclick="triggerAdd()">${ic.plus()}</button>
+    </div>
+  
   await saveData();
   e.target.value = '';
   toast(`Added ${count} song${count===1?'':'s'}`);
@@ -903,7 +901,61 @@ function updateMediaSession(song){
   navigator.mediaSession.setActionHandler('previoustrack', prevTrack);
   navigator.mediaSession.setActionHandler('nexttrack', nextTrack);
 }
+async function rescanLibrary() {
+  toast("Scanning library for hidden tags...");
+  let updatedCount = 0;
 
+  // Loop through every song you've already added
+  for (const song of state.songs) {
+    // Grab the MP3 file from your permanent database
+    let file = sessionFiles[song.id];
+    if (!file) {
+      file = await getAudio(song.id);
+    }
+    
+    if (file) {
+      // Use the X-Ray tool to scan the file
+      await new Promise((resolve) => {
+        window.jsmediatags.read(file, {
+          onSuccess: function(tag) {
+            let changed = false;
+            
+            // Check for Title
+            if (tag.tags.title && song.title !== tag.tags.title) { 
+              song.title = tag.tags.title; 
+              changed = true; 
+            }
+            // Check for Artist
+            if (tag.tags.artist && song.artist !== tag.tags.artist) { 
+              song.artist = tag.tags.artist; 
+              changed = true; 
+            }
+            // Check for Lyrics
+            if (tag.tags.lyrics && tag.tags.lyrics.lyrics && song.lyrics !== tag.tags.lyrics.lyrics) { 
+              song.lyrics = tag.tags.lyrics.lyrics; 
+              changed = true; 
+            }
+            
+            if (changed) updatedCount++;
+            resolve();
+          },
+          onError: function() { 
+            resolve(); // If no tags, just move on to the next song
+          }
+        });
+      });
+    }
+  }
+  
+  // If we found new info, save it and refresh the screen
+  if (updatedCount > 0) {
+    saveData();
+    render();
+    toast(`Updated ${updatedCount} song(s) with new info!`);
+  } else {
+    toast("Scan complete: No new hidden tags found.");
+  }
+}
 /* ---------------- share ---------------- */
 async function shareSong(id){
   const s = songById(id);
