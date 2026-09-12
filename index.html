@@ -601,6 +601,7 @@ function renderModal(){
   if(m.type==='addToPlaylist') return renderAddToPlaylistModal(m.songId);
   if(m.type==='createPlaylist') return renderCreatePlaylistModal();
   return '';
+}
 function renderEditModal(id){
   const s = songById(id);
   if(!s) return '';
