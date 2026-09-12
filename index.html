@@ -604,21 +604,27 @@ function renderModal(){
 }
 function renderEditModal(id){
   const s = songById(id);
-  return `<div class="overlay" onclick="closeModalBg(event)"><div class="sheet" onclick="event.stopPropagation()">
-    <div class="sheet-head"><h3>Edit song</h3><button onclick="closeModal()">${ic.x}</button></div>
-    <div class="field"><label>Cover</label>
-      <div class="cover-picker">
-        <div class="cover" style="width:64px;height:64px;padding:0">${coverStyle(s)}</div>
-        <button onclick="triggerCoverPick('${id}')">${ic.camera} Change cover</button>
+  if(!s) return '';
+  return `
+    <div class="sheet-overlay" onclick="closeModal()"></div>
+    <div class="sheet">
+      <div class="sheet-head">
+        <h3 style="margin:0;font-size:18px;color:var(--navy);font-weight:700;">Edit song</h3>
+        <button class="close" onclick="closeModal()">✕</button>
+      </div>
+      <div class="field"><label>Title</label><input type="text" id="editTitle" value="${escapeAttr(s.title)}"></div>
+      <div class="field"><label>Artist</label><input type="text" id="editArtist" value="${escapeAttr(s.artist)}"></div>
+      
+      <div class="field">
+        <label>Lyrics</label>
+        <textarea id="editLyrics" rows="4" style="width:100%;background:var(--card);border:1.5px solid var(--border);border-radius:12px;padding:11px 13px;font-size:14px;color:var(--navy);outline:none;font-family:inherit;">${escapeHtml(s.lyrics || '')}</textarea>
+      </div>
+      
+      <div class="sheet-actions">
+        <button class="round-btn filled" style="width:100%;border-radius:12px;height:48px;" onclick="saveEdit('${id}')">Save</button>
       </div>
     </div>
-    <div class="field"><label>Title</label><input type="text" id="editTitle" value="${escapeAttr(s.title)}"></div>
-    <div class="field"><label>Artist</label><input type="text" id="editArtist" value="${escapeAttr(s.artist)}"></div>
-    <div class="sheet-actions">
-      <button class="btn ghost" onclick="closeModal()">Cancel</button>
-      <button class="btn primary" onclick="saveEdit('${id}')">Save</button>
-    </div>
-  </div></div>`;
+  `;
 }
 
 function renderOptionsModal(id){
